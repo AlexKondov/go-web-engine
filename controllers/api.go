@@ -5,18 +5,34 @@ import (
 	"fmt"
 	"net/http"
 
+	"basaigbook/data"
 	"basaigbook/engine"
 )
 
 // API is the starting point of our API.
 // Responsible for routing the request to the correct handler
 type API struct {
-	User *engine.Route
+	DB     *data.DB
+	Logger func(http.Handler) http.Handler
+	User   *engine.Route
+}
+
+// NewAPI returns a production API with all middlewares
+func NewAPI() *API {
+	return &API{
+		Logger: engine.Logger,
+	}
 }
 
 func (a *API) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	ctx = context.WithValue(ctx, engine.ContextOriginalPath, r.URL.Path)
+
+	if a.DB.CopySession {
+		a.DB.Users.RefreshSession(a.DB.Connection, a.DB.DatabaseName)
+	}
+
+	ctx = context.WithValue(ctx, engine.ContextDatabase, a.DB)
 
 	var next *engine.Route
 	var head string
@@ -28,7 +44,7 @@ func (a *API) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if next.Logger {
-		next.Handler = engine.Logger(next.Handler)
+		next.Handler = a.Logger(next.Handler)
 	}
 
 	next.Handler.ServeHTTP(w, r.WithContext(ctx))
