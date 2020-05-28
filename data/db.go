@@ -19,5 +19,8 @@ type SessionRefresher interface {
 type UserServices interface {
 	SessionRefresher
 	SignUp(email, password string) (*model.Account, error)
+	AddToken(accountID, userID model.Key, name string) (*model.AccessToken, error)
+	RemoveToken(accountID, userID, tokenID model.Key) error
+	Auth(accountID, token string, pat bool) (*model.Account, *model.User, error)
 	GetDetail(id model.Key) (*model.Account, error)
 }
