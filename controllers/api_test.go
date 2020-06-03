@@ -20,6 +20,8 @@ func executeRequest(req *http.Request) *httptest.ResponseRecorder {
 		DB:            db,
 		Logger:        logger,
 		Authenticator: authenticator,
+		Throttler:     throttler,
+		RateLimiter:   ratelimiter,
 	}
 
 	rec := httptest.NewRecorder()
@@ -35,6 +37,18 @@ func logger(next http.Handler) http.Handler {
 }
 
 func authenticator(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		next.ServeHTTP(w, r)
+	})
+}
+
+func throttler(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		next.ServeHTTP(w, r)
+	})
+}
+
+func ratelimiter(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		next.ServeHTTP(w, r)
 	})

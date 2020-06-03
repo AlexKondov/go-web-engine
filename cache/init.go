@@ -4,6 +4,7 @@ import (
 	"log"
 	"os"
 
+	"basaigbook/queue"
 	"github.com/go-redis/redis"
 )
 
@@ -26,4 +27,12 @@ func init() {
 	}
 
 	rc = c
+}
+
+func New(queueProcessor, isDev bool) {
+	queue.New(rc, isDev)
+
+	if queueProcessor {
+		queue.SetAsSubscriber()
+	}
 }
